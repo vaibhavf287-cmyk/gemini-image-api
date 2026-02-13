@@ -1,47 +1,66 @@
 import os
 import requests
-from flask import Flask, request
+import time
+from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-DEEPAI_API_KEY = os.environ.get("DEEPAI_API_KEY")
+REPLICATE_API_TOKEN = os.environ.get("REPLICATE_API_TOKEN")
+
+MODEL_VERSION = "7762fd07cf82c948538e41f63f77d685e02b063e37e496e96eefd46c929f9bdc"
 
 @app.route("/")
 def home():
-    return """
-    <h2>AI Image Generator</h2>
-    <form action="/generate" method="post">
-        <input type="text" name="prompt" placeholder="Enter prompt"
-        style="width:300px;height:40px;">
-        <button type="submit" style="height:40px;">Generate</button>
-    </form>
-    """
+    return "SDXL Image API Running"
 
 @app.route("/generate", methods=["POST"])
 def generate():
-    prompt = request.form.get("prompt")
+    data = request.get_json()
+    prompt = data.get("prompt")
 
     if not prompt:
-        return "Enter a prompt"
+        return jsonify({"error": "Prompt required"}), 400
+
+    headers = {
+        "Authorization": f"Token {REPLICATE_API_TOKEN}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "version": MODEL_VERSION,
+        "input": {
+            "prompt": prompt,
+            "width": 768,
+            "height": 768,
+            "num_inference_steps": 25
+        }
+    }
 
     response = requests.post(
-        "https://api.deepai.org/api/text2img",
-        data={"text": prompt},
-        headers={"api-key": DEEPAI_API_KEY}
+        "https://api.replicate.com/v1/predictions",
+        headers=headers,
+        json=payload
     )
 
-    result = response.json()
+    prediction = response.json()
 
-    if "output_url" not in result:
-        return f"Error: {result}"
+    if "id" not in prediction:
+        return jsonify(prediction)
 
-    return f"""
-    <h3>Generated Image:</h3>
-    <img src="{result['output_url']}" width="512"/>
-    <br><br>
-    <a href="/">Back</a>
-    """
+    prediction_id = prediction["id"]
 
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    while True:
+        time.sleep(2)
+        check = requests.get(
+            f"https://api.replicate.com/v1/predictions/{prediction_id}",
+            headers=headers
+        )
+        result = check.json()
+
+        if result["status"] == "succeeded":
+            return jsonify({
+                "image_url": result["output"][0]
+            })
+
+        if result["status"] == "failed":
+            return jsonify(result)
