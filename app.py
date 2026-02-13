@@ -1,24 +1,16 @@
 import os
 import requests
-import base64
 from flask import Flask, request
 
 app = Flask(__name__)
 
-# 🔴 Apna Hugging Face token yahan dalo
-HF_TOKEN = "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"
-
-API_URL = "https://router.huggingface.co/hf-inference/models/runwayml/stable-diffusion-v1-5"
-
-headers = {
-    "Authorization": f"Bearer {HF_TOKEN}",
-    "Content-Type": "application/json"
-}
+# 🔴 Yahan apni DeepAI API key daalo
+DEEPAI_API_KEY = "e00ff251-416d-41b2-b05e-c5ea692fe3e5"
 
 @app.route("/")
 def home():
     return """
-    <h2>Free AI Image Generator</h2>
+    <h2>Simple Free Image Generator</h2>
     <form action="/generate" method="post">
         <input type="text" name="prompt" placeholder="Enter prompt"
         style="width:300px;height:40px;">
@@ -34,24 +26,24 @@ def generate():
         return "Please enter a prompt"
 
     response = requests.post(
-        API_URL,
-        headers=headers,
-        json={"inputs": prompt}
+        "https://api.deepai.org/api/text2img",
+        data={"text": prompt},
+        headers={"api-key": DEEPAI_API_KEY}
     )
 
-    if response.status_code != 200:
-        return f"Error: {response.text}"
+    result = response.json()
 
-    image_base64 = base64.b64encode(response.content).decode("utf-8")
+    if "output_url" not in result:
+        return f"Error: {result}"
+
+    image_url = result["output_url"]
 
     return f"""
     <h3>Generated Image:</h3>
-    <img src="data:image/png;base64,{image_base64}" width="512"/>
+    <img src="{image_url}" width="512"/>
     <br><br>
     <a href="/">Generate Another</a>
     """
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
-
-
