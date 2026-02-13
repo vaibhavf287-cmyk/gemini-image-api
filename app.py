@@ -1,61 +1,56 @@
 import os
+import requests
 import base64
 from flask import Flask, request
-from google import genai
 
 app = Flask(__name__)
 
-# 🔴 YAHAN APNI GEMINI API KEY DALO
-api_key = "AIzaSyDzFm17-FvpNiJAW-TWSufgHQIlCknGaRU"
+# 🔴 YAHAN APNA HUGGINGFACE TOKEN DALO
+HF_TOKEN = "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"
 
-client = genai.Client(api_key=api_key)
+API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2"
 
+headers = {
+    "Authorization": f"Bearer {HF_TOKEN}"
+}
 
 @app.route("/")
 def home():
     return """
-    <h2>Gemini Image Generator</h2>
+    <h2>Free AI Image Generator (Stable Diffusion)</h2>
     <form action="/generate" method="post">
-        <input type="text" name="prompt" placeholder="Enter prompt" 
-        style="width:300px;height:35px;font-size:16px;">
-        <button type="submit" style="height:40px;">Generate</button>
+        <input type="text" name="prompt" placeholder="Enter prompt"
+        style="width:300px;height:35px;">
+        <button type="submit">Generate</button>
     </form>
     """
 
-
 @app.route("/generate", methods=["POST"])
 def generate():
-    try:
-        prompt = request.form.get("prompt")
+    prompt = request.form.get("prompt")
 
-        if not prompt:
-            return "Please enter a prompt"
+    if not prompt:
+        return "Enter prompt"
 
-        response = client.models.generate_content(
-    model="gemini-3-flash-preview",
-    contents=[prompt],
-)
+    response = requests.post(
+        API_URL,
+        headers=headers,
+        json={"inputs": prompt}
+    )
 
+    if response.status_code != 200:
+        return f"Error: {response.text}"
 
-        for part in response.candidates[0].content.parts:
-            if part.inline_data:
-                image_bytes = part.inline_data.data
-                image_base64 = base64.b64encode(image_bytes).decode("utf-8")
+    image_base64 = base64.b64encode(response.content).decode("utf-8")
 
-                return f"""
-                <h3>Generated Image:</h3>
-                <img src="data:image/png;base64,{image_base64}" width="500"/>
-                <br><br>
-                <a href="/">Generate Another Image</a>
-                """
+    return f"""
+    <h3>Generated Image:</h3>
+    <img src="data:image/png;base64,{image_base64}" width="500"/>
+    <br><br>
+    <a href="/">Generate Another</a>
+    """
 
-        return "Image not generated"
-
-    except Exception as e:
-        return f"Error: {str(e)}"
-
-
-# 🔥 IMPORTANT: Render compatible dynamic port
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
