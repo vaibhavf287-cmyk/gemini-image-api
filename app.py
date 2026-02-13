@@ -32,9 +32,10 @@ def generate():
             return "Please enter a prompt"
 
         response = client.models.generate_content(
-            model="gemini-2.0-flash-preview-image-generation",
-            contents=[prompt],
-        )
+    model="gemini-3-flash-preview",
+    contents=[prompt],
+)
+
 
         for part in response.candidates[0].content.parts:
             if part.inline_data:
