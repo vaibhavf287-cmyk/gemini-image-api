@@ -5,19 +5,20 @@ from flask import Flask, request
 
 app = Flask(__name__)
 
-# 🔴 YAHAN APNA HUGGINGFACE TOKEN DALO
+# 🔴 YAHAN APNA TOKEN DALO
 HF_TOKEN = "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"
 
-API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2"
+API_URL = "https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-2"
 
 headers = {
-    "Authorization": f"Bearer {HF_TOKEN}"
+    "Authorization": f"Bearer {HF_TOKEN}",
+    "Content-Type": "application/json"
 }
 
 @app.route("/")
 def home():
     return """
-    <h2>Free AI Image Generator (Stable Diffusion)</h2>
+    <h2>Free AI Image Generator</h2>
     <form action="/generate" method="post">
         <input type="text" name="prompt" placeholder="Enter prompt"
         style="width:300px;height:35px;">
@@ -53,4 +54,5 @@ def generate():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+t=port)
 
