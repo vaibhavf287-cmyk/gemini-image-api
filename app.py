@@ -5,10 +5,10 @@ from flask import Flask, request
 
 app = Flask(__name__)
 
-# 🔴 YAHAN APNA TOKEN DALO
+# 🔴 Apna Hugging Face token yahan dalo
 HF_TOKEN = "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"
 
-API_URL = "https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-2"
+API_URL = "https://router.huggingface.co/hf-inference/models/runwayml/stable-diffusion-v1-5"
 
 headers = {
     "Authorization": f"Bearer {HF_TOKEN}",
@@ -21,8 +21,8 @@ def home():
     <h2>Free AI Image Generator</h2>
     <form action="/generate" method="post">
         <input type="text" name="prompt" placeholder="Enter prompt"
-        style="width:300px;height:35px;">
-        <button type="submit">Generate</button>
+        style="width:300px;height:40px;">
+        <button type="submit" style="height:40px;">Generate</button>
     </form>
     """
 
@@ -31,7 +31,7 @@ def generate():
     prompt = request.form.get("prompt")
 
     if not prompt:
-        return "Enter prompt"
+        return "Please enter a prompt"
 
     response = requests.post(
         API_URL,
@@ -46,13 +46,12 @@ def generate():
 
     return f"""
     <h3>Generated Image:</h3>
-    <img src="data:image/png;base64,{image_base64}" width="500"/>
+    <img src="data:image/png;base64,{image_base64}" width="512"/>
     <br><br>
     <a href="/">Generate Another</a>
     """
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
-t=port)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+
 
