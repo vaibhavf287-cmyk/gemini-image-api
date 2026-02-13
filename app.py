@@ -1,3 +1,4 @@
+import os
 import base64
 from flask import Flask, request
 from google import genai
@@ -15,8 +16,9 @@ def home():
     return """
     <h2>Gemini Image Generator</h2>
     <form action="/generate" method="post">
-        <input type="text" name="prompt" placeholder="Enter prompt" style="width:300px;height:30px;">
-        <button type="submit" style="height:35px;">Generate</button>
+        <input type="text" name="prompt" placeholder="Enter prompt" 
+        style="width:300px;height:35px;font-size:16px;">
+        <button type="submit" style="height:40px;">Generate</button>
     </form>
     """
 
@@ -38,11 +40,12 @@ def generate():
             if part.inline_data:
                 image_bytes = part.inline_data.data
                 image_base64 = base64.b64encode(image_bytes).decode("utf-8")
+
                 return f"""
                 <h3>Generated Image:</h3>
-                <img src="data:image/png;base64,{image_base64}" width="400"/>
+                <img src="data:image/png;base64,{image_base64}" width="500"/>
                 <br><br>
-                <a href="/">Generate Another</a>
+                <a href="/">Generate Another Image</a>
                 """
 
         return "Image not generated"
@@ -51,6 +54,7 @@ def generate():
         return f"Error: {str(e)}"
 
 
+# 🔥 IMPORTANT: Render compatible dynamic port
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
-
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
